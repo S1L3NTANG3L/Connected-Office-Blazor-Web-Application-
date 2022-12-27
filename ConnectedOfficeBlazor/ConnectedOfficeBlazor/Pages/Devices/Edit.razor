@@ -1,0 +1,118 @@
+﻿@page "/Devices/Edit/{DeviceId:guid}"
+
+@using DataAccessLibrary
+@using DataAccessLibrary.Models
+@using DataAccessLibrary.Services
+
+@inject IDeviceData _dbDevices
+@inject IZoneData _dbZones
+@inject ICategoryData _dbCategories
+@inject NavigationManager NavigationManager
+
+<h1>Edit Device</h1>
+<hr />
+@if(device is null || zones is null || categories is null)
+{
+	<LoadingTemplate> 
+		<span class="spinner-grow spinner-grow-sm" role="status" aria-hidden="true"></span>
+		Loading...        
+    </LoadingTemplate>
+}
+else
+{
+    <div class="row">
+        <div class="col-md-6">
+            <EditForm EditContext="@context" OnSubmit="@SubmitEventHandler">
+                <DataAnnotationsValidator />
+                <fieldset>
+                    <legend>Device Name</legend>
+                    <InputText @bind-Value="editDevice.DeviceName" />
+                    <ValidationMessage For=@(() => editDevice.DeviceName) />
+                </fieldset>
+                <fieldset>
+                    <legend>Device Zone</legend>
+                    <InputSelect @bind-Value="editDevice.ZoneID" class="form-control">
+                        <option value=""></option>
+                        @foreach (var zone in zones)
+                        {
+                            <option value="@zone.ZoneID">@zone.ZoneName</option>
+                        }
+                    </InputSelect>
+                    <ValidationMessage For=@(() => editDevice.ZoneID) />
+                </fieldset>
+                <fieldset>
+                    <legend>Device Category</legend>
+                    <InputSelect @bind-Value="editDevice.CategoryID" class="form-control">
+                        <option value=""></option>
+                        @foreach (var category in categories)
+                        {
+                            <option value="@category.CategoryID">@category.CategoryName</option>
+                        }
+                    </InputSelect>
+                    <ValidationMessage For=@(() => editDevice.CategoryID)/>
+                </fieldset>
+                <fieldset>
+                    <legend>Device Status</legend>
+                    <InputText @bind-Value="editDevice.Status" />
+                    <ValidationMessage For=@(() => editDevice.Status) />
+                </fieldset>
+                <fieldset>
+                    <legend>Device Active</legend>
+                    <InputCheckbox class="form-switch active" @bind-Value="editDevice.IsActive"/>
+                </fieldset>
+                <div>
+                    <button class="btn btn-outline-dark" type="submit"> Edit Device </button>
+                    <Button class="btn btn-outline-dark" @onclick="OnClickDetails"> Back to Details </Button> 
+                    <Button class="btn btn-outline-dark" @onclick="OnClickList"> Back to List </Button>
+                </div>
+            </EditForm>
+        </div>
+    </div>    
+}
+
+
+@code {
+    [Parameter]
+    public Guid DeviceId { get; set; }
+    private DeviceModel device;
+    private List<ZoneModel> zones;
+    private List<CategoryModel> categories;
+    public DeviceModel editDevice { get; set; } = new();
+    EditContext context;
+    protected override async Task OnInitializedAsync()
+    {
+        //Get current device details
+        device = await _dbDevices.GetDeviceById(DeviceId);
+        //Get all zones
+        zones = await _dbZones.GetZones();
+        //Get all categories
+        categories = await _dbCategories.GetCategories();
+        //Set current device details as defaults
+        editDevice.DeviceID = device.DeviceID;
+        editDevice.DeviceName = device.DeviceName;
+        editDevice.CategoryID = device.CategoryID;
+        editDevice.ZoneID = device.ZoneID;
+        editDevice.DateCreated = device.DateCreated;
+        editDevice.Status = device.Status;
+        editDevice.IsActive = device.IsActive;
+        //Initialise context
+        context = new EditContext(editDevice);
+    }
+    protected void OnClickDetails(EventArgs args)
+    {
+        NavigationManager.NavigateTo("/Devices/Details/" + DeviceId);
+    }
+    protected void OnClickList(EventArgs args)
+    {
+        NavigationManager.NavigateTo("/Devices/Index");
+    }
+    private void SubmitEventHandler(EditContext context)
+    {
+        //Check that all form entries are valid
+        if (context.Validate())
+        {
+            _dbDevices.UpdateDevice(editDevice);
+            NavigationManager.NavigateTo("/Devices/Details/" + editDevice.DeviceID);
+        }
+    }
+}

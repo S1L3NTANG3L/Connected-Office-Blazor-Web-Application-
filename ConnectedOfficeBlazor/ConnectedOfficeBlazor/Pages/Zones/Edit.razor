@@ -1,0 +1,81 @@
+﻿@page "/Zones/Edit/{ZoneId:guid}"
+
+@using DataAccessLibrary
+@using DataAccessLibrary.Models
+@using DataAccessLibrary.Services
+
+@inject IZoneData _dbZones
+@inject NavigationManager NavigationManager
+
+<h1>Edit Zone</h1>
+<hr />
+@if(zone is null)
+{
+	<LoadingTemplate> 
+		<span class="spinner-grow spinner-grow-sm" role="status" aria-hidden="true"></span>
+		Loading...        
+    </LoadingTemplate>
+}
+else
+{
+    <div class="row">
+        <div class="col-md-6">
+            <EditForm EditContext="@context" OnSubmit="@SubmitEventHandler">
+                <DataAnnotationsValidator />
+                <fieldset>
+                    <legend>Zone Name</legend>
+                    <InputText @bind-Value="editZone.ZoneName" />
+                    <ValidationMessage For=@(() => editZone.ZoneName) />
+                </fieldset>
+                <fieldset>
+                    <legend>Zone Description</legend>
+                    <InputText @bind-Value="editZone.ZoneDescription" />
+                    <ValidationMessage For=@(() => editZone.ZoneDescription) />
+                </fieldset>
+                <div>
+                    <button class="btn btn-outline-dark" type="submit"> Edit Zone </button>
+                    <Button class="btn btn-outline-dark" @onclick="OnClickDetails"> Back to Details </Button> 
+                    <Button class="btn btn-outline-dark" @onclick="OnClickList"> Back to List </Button>
+                </div>
+            </EditForm>
+        </div>
+    </div>    
+}
+
+
+@code {
+    [Parameter]
+    public Guid ZoneId { get; set; }
+    private ZoneModel zone;
+    public ZoneModel editZone { get; set; } = new();
+    EditContext context;
+    protected override async Task OnInitializedAsync()
+    {
+        //Get current zone info
+        zone = await _dbZones.GetZoneById(ZoneId);
+        //Set current zone details as defaults
+        editZone.ZoneID = zone.ZoneID;
+        editZone.ZoneName = zone.ZoneName;
+        editZone.ZoneDescription = zone.ZoneDescription;
+        editZone.DateCreated = zone.DateCreated;
+        //Initialise context
+        context = new EditContext(editZone);
+    }
+    protected void OnClickDetails(EventArgs args)
+    {
+        NavigationManager.NavigateTo("/Zones/Details/" + ZoneId);
+    }
+    protected void OnClickList(EventArgs args)
+    {
+        NavigationManager.NavigateTo("/Zones/Index");
+    }
+    private void SubmitEventHandler(EditContext context)
+    {
+        //Check that all form entries are valid
+        if (context.Validate())
+        {
+            _dbZones.UpdateZone(editZone);
+            NavigationManager.NavigateTo("/Zones/Details/" + editZone.ZoneID);
+        }
+    }
+}

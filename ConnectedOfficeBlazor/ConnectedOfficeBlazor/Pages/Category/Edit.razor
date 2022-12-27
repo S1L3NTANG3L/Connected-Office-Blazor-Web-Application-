@@ -1,0 +1,81 @@
+﻿@page "/Categories/Edit/{CategoryId:guid}"
+
+@using DataAccessLibrary
+@using DataAccessLibrary.Models
+@using DataAccessLibrary.Services
+
+@inject ICategoryData _dbCategories
+@inject NavigationManager NavigationManager
+
+<h1>Edit Category</h1>
+<hr />
+@if(Category is null)
+{
+	<LoadingTemplate> 
+		<span class="spinner-grow spinner-grow-sm" role="status" aria-hidden="true"></span>
+		Loading...        
+    </LoadingTemplate>
+}
+else
+{
+    <div class="row">
+        <div class="col-md-6">
+            <EditForm EditContext="@context" OnSubmit="@SubmitEventHandler">
+                <DataAnnotationsValidator />
+                <fieldset>
+                    <legend>Category Name</legend>
+                    <InputText @bind-Value="editCategory.CategoryName" />
+                    <ValidationMessage For=@(() => editCategory.CategoryName) />
+                </fieldset>
+                <fieldset>
+                    <legend>Category Description</legend>
+                    <InputText @bind-Value="editCategory.CategoryDescription" />
+                    <ValidationMessage For=@(() => editCategory.CategoryDescription) />
+                </fieldset>
+                <div>
+                    <button class="btn btn-outline-dark" type="submit"> Edit Category </button>
+                    <Button class="btn btn-outline-dark" @onclick="OnClickDetails"> Back to Details </Button> 
+                    <Button class="btn btn-outline-dark" @onclick="OnClickList"> Back to List </Button>
+                </div>
+            </EditForm>
+        </div>
+    </div>    
+}
+
+
+@code {
+    [Parameter]
+    public Guid CategoryId { get; set; }
+    private CategoryModel Category;
+    public CategoryModel editCategory { get; set; } = new();
+    EditContext context;
+    protected override async Task OnInitializedAsync()
+    {
+        //Get current Category info
+        Category = await _dbCategories.GetCategoryById(CategoryId);
+        //Set current Category details as defaults
+        editCategory.CategoryID = Category.CategoryID;
+        editCategory.CategoryName = Category.CategoryName;
+        editCategory.CategoryDescription = Category.CategoryDescription;
+        editCategory.DateCreated = Category.DateCreated;
+        //Initialise context
+        context = new EditContext(editCategory);
+    }
+    protected void OnClickDetails(EventArgs args)
+    {
+        NavigationManager.NavigateTo("/Categories/Details/" + CategoryId);
+    }
+    protected void OnClickList(EventArgs args)
+    {
+        NavigationManager.NavigateTo("/Categories/Index");
+    }
+    private void SubmitEventHandler(EditContext context)
+    {
+        //Check that all form entries are valid
+        if (context.Validate())
+        {
+            _dbCategories.UpdateCategory(editCategory);
+            NavigationManager.NavigateTo("/Categories/Details/" + editCategory.CategoryID);
+        }
+    }
+}

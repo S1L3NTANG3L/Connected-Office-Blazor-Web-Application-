@@ -1,0 +1,71 @@
+﻿@*Index page used to show all devices*@
+@page "/Categories/Index"
+
+@using DataAccessLibrary
+@using DataAccessLibrary.Models
+@using DataAccessLibrary.Services
+
+@inject ICategoryData _dbCategories
+
+@*"~/images/create.png" Causes an error: https://stackoverflow.com/questions/52135957/how-to-show-image-in-blazor-view "/images/create.png" : Works*@
+<h1>
+	Categories
+	<a href="/Categories/Create/">@*Counter currently just a place holder *@
+		<img src="/images/create.png" style="height:30px; width:30px; position:relative; top:-2px" />
+	</a>
+</h1>
+
+<h4>Current Categories</h4>
+
+@if(categories is null)
+{
+	<LoadingTemplate> 
+		<span class="spinner-grow spinner-grow-sm" role="status" aria-hidden="true"></span>
+		Loading...        
+	</LoadingTemplate>
+}
+else
+{
+	<table class="table table-borderless">
+		<thead> 
+			<tr>
+				<td>Category Name</td>
+				<td>Category Description</td>
+				<td>Date Created</td>
+			</tr>
+		</thead>
+		<tbody>
+			@foreach(var category in categories)
+			{
+				<tr> 
+					<td>@category.CategoryName</td>
+					<td>@category.CategoryDescription</td>
+					<td>@category.DateCreated</td>
+					<td>
+						<a href="/Categories/Edit/@category.CategoryID">
+							<img src="/images/edit.png" style="height:20px;width:20px;" />
+						</a>
+					</td>
+					<td>
+						<a href="/Categories/Details/@category.CategoryID">
+							<img src="/images/details.png" style="height:20px;width:20px;" />
+						</a>
+					</td>
+					<td>
+						<a href="/Categories/Delete/@category.CategoryID">
+							<img src="/images/delete.png" style="height:20px;width:20px;" />
+						</a>
+					</td>
+				</tr>
+			}
+		</tbody>
+	</table>
+}
+
+@code {
+	private List<CategoryModel>? categories;
+	protected override async Task OnInitializedAsync()
+	{
+		categories = await _dbCategories.GetCategories();
+	}
+}

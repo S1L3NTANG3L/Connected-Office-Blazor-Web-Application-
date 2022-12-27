@@ -1,0 +1,58 @@
+﻿@page "/Zones/Create"
+
+@using DataAccessLibrary
+@using DataAccessLibrary.Models
+@using DataAccessLibrary.Services
+
+@inject IZoneData _dbZones
+@inject NavigationManager NavigationManager
+
+<h1>Create Zone</h1>
+<hr />
+<div class="row">
+    <div class="col-md-6">
+        <EditForm EditContext="@context" OnSubmit="@SubmitEventHandler">
+            <DataAnnotationsValidator />
+            <fieldset>
+                <legend>Zone Name</legend>
+                <InputText @bind-Value="createZone.ZoneName" />
+                <ValidationMessage For=@(() => createZone.ZoneName) />
+            </fieldset>
+            <fieldset>
+                <legend>Zone Description</legend>
+                <InputText @bind-Value="createZone.ZoneDescription" />
+                <ValidationMessage For=@(() => createZone.ZoneDescription) />
+            </fieldset>
+            <div>
+                <button class="btn btn-outline-dark" type="submit"> Create Zone </button>
+                <Button class="btn btn-outline-dark" @onclick="OnClickList"> Back to List </Button>
+            </div>
+        </EditForm>
+    </div>
+</div>
+
+
+@code {
+    public ZoneModel createZone { get; set; } = new();
+    EditContext context;
+    protected override async Task OnInitializedAsync()
+    {
+        //Initialise context
+        context = new EditContext(createZone);
+    }
+    protected void OnClickList(EventArgs args)
+    {
+        NavigationManager.NavigateTo("/Zones/Index");
+    }
+
+    private void SubmitEventHandler(EditContext context)
+    {
+        if (context.Validate())
+        {
+            createZone.ZoneID = Guid.NewGuid();
+            createZone.DateCreated = DateTime.Now;
+            _dbZones.InsertZone(createZone);
+            NavigationManager.NavigateTo("/Zones/Details/" + createZone.ZoneID);
+        }
+    }
+}

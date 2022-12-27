@@ -1,0 +1,68 @@
+﻿@*Index page used to show all devices*@
+@page "/Categories/Details/{CategoryId:guid}"
+
+@using DataAccessLibrary
+@using DataAccessLibrary.Models
+@using DataAccessLibrary.Services
+
+@inject ICategoryData _dbCategories
+@inject NavigationManager NavigationManager
+
+<h1>Category Details</h1>
+
+@if(category is null)
+{
+    <LoadingTemplate> 
+		<span class="spinner-grow spinner-grow-sm" role="status" aria-hidden="true"></span>
+		Loading...        
+	</LoadingTemplate>
+}
+else
+{
+    <div>
+        <dl class="row">
+            <dt class="col-sm-2">
+                Category Name
+            </dt>
+            <dd class="col-sm-10">
+                @category.CategoryName
+            </dd>
+            <dt class="col-sm-2">
+                Category Description
+            </dt>
+            <dd class="col-sm-10">
+                @category.CategoryDescription
+            </dd>
+            <dt class="col-sm-2">
+                Date Created
+            </dt>
+            <dd class="col-sm-10">
+                @category.DateCreated
+            </dd>
+        </dl>
+    </div>
+    <div>
+        <Button class="btn btn-outline-dark" @onclick="OnClickEdit"> Edit Category </Button>
+        <Button class="btn btn-outline-dark" @onclick="OnClickList"> Back to List </Button>
+    </div>
+}
+
+
+@code {
+    [Parameter]
+    public Guid CategoryId { get; set; }
+
+    private CategoryModel category;
+    protected override async Task OnInitializedAsync()
+    {
+        category = await _dbCategories.GetCategoryById(CategoryId);
+    }
+    protected void OnClickEdit(EventArgs args) 
+    {
+        NavigationManager.NavigateTo("/Categories/Edit/" + CategoryId);
+    }
+    protected void OnClickList(EventArgs args)
+    {
+        NavigationManager.NavigateTo("/Categories/Index");
+    }
+}

@@ -1,0 +1,68 @@
+﻿@*Index page used to show all devices*@
+@page "/Zones/Details/{ZoneId:guid}"
+
+@using DataAccessLibrary
+@using DataAccessLibrary.Models
+@using DataAccessLibrary.Services
+
+@inject IZoneData _dbZones
+@inject NavigationManager NavigationManager
+
+<h1>Zone Details</h1>
+
+@if(zone is null)
+{
+    <LoadingTemplate> 
+		<span class="spinner-grow spinner-grow-sm" role="status" aria-hidden="true"></span>
+		Loading...        
+	</LoadingTemplate>
+}
+else
+{
+    <div>
+        <dl class="row">
+            <dt class="col-sm-2">
+                Zone Name
+            </dt>
+            <dd class="col-sm-10">
+                @zone.ZoneName
+            </dd>
+            <dt class="col-sm-2">
+                Zone Description
+            </dt>
+            <dd class="col-sm-10">
+                @zone.ZoneDescription
+            </dd>
+            <dt class="col-sm-2">
+                Date Created
+            </dt>
+            <dd class="col-sm-10">
+                @zone.DateCreated
+            </dd>
+        </dl>
+    </div>
+    <div>
+        <Button class="btn btn-outline-dark" @onclick="OnClickEdit"> Edit Zone </Button>
+        <Button class="btn btn-outline-dark" @onclick="OnClickList"> Back to List </Button>
+    </div>
+}
+
+
+@code {
+    [Parameter]
+    public Guid ZoneId { get; set; }
+
+    private ZoneModel zone;
+    protected override async Task OnInitializedAsync()
+    {
+        zone = await _dbZones.GetZoneById(ZoneId);
+    }
+    protected void OnClickEdit(EventArgs args) 
+    {
+        NavigationManager.NavigateTo("/Zones/Edit/" + ZoneId);
+    }
+    protected void OnClickList(EventArgs args)
+    {
+        NavigationManager.NavigateTo("/Zones/Index");
+    }
+}

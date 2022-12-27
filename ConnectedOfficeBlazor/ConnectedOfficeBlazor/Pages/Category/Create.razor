@@ -1,0 +1,58 @@
+﻿@page "/Categories/Create"
+
+@using DataAccessLibrary
+@using DataAccessLibrary.Models
+@using DataAccessLibrary.Services
+
+@inject ICategoryData _dbCategories
+@inject NavigationManager NavigationManager
+
+<h1>Create Category</h1>
+<hr />
+<div class="row">
+    <div class="col-md-6">
+        <EditForm EditContext="@context" OnSubmit="@SubmitEventHandler">
+            <DataAnnotationsValidator />
+            <fieldset>
+                <legend>Category Name</legend>
+                <InputText @bind-Value="createCategory.CategoryName" />
+                <ValidationMessage For=@(() => createCategory.CategoryName) />
+            </fieldset>
+            <fieldset>
+                <legend>Category Description</legend>
+                <InputText @bind-Value="createCategory.CategoryDescription" />
+                <ValidationMessage For=@(() => createCategory.CategoryDescription) />
+            </fieldset>
+            <div>
+                <button class="btn btn-outline-dark" type="submit"> Create Category </button>
+                <Button class="btn btn-outline-dark" @onclick="OnClickList"> Back to List </Button>
+            </div>
+        </EditForm>
+    </div>
+</div>
+
+
+@code {
+    public CategoryModel createCategory { get; set; } = new();
+    EditContext context;
+    protected override async Task OnInitializedAsync()
+    {
+        //Initialise context
+        context = new EditContext(createCategory);
+    }
+    protected void OnClickList(EventArgs args)
+    {
+        NavigationManager.NavigateTo("/Categories/Index");
+    }
+
+    private void SubmitEventHandler(EditContext context)
+    {
+        if (context.Validate())
+        {
+            createCategory.CategoryID = Guid.NewGuid();
+            createCategory.DateCreated = DateTime.Now;
+            _dbCategories.InsertCategory(createCategory);
+            NavigationManager.NavigateTo("/Categories/Details/" + createCategory.CategoryID);
+        }
+    }
+}

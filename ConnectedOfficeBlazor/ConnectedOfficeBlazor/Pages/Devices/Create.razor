@@ -1,0 +1,104 @@
+﻿@page "/Devices/Create/"
+
+@using DataAccessLibrary
+@using DataAccessLibrary.Models
+@using DataAccessLibrary.Services
+
+@inject IDeviceData _dbDevices
+@inject IZoneData _dbZones
+@inject ICategoryData _dbCategories
+@inject NavigationManager NavigationManager
+
+<h1>Create Device</h1>
+<hr />
+@if(zones is null || categories is null)
+{
+	<LoadingTemplate> 
+		<span class="spinner-grow spinner-grow-sm" role="status" aria-hidden="true"></span>
+		Loading...        
+    </LoadingTemplate>
+}
+else
+{
+    <div class="row">
+        <div class="col-md-6">
+            <EditForm EditContext="@context" OnSubmit="@SubmitEventHandler">
+                <DataAnnotationsValidator />
+                <fieldset>
+                    <legend>Device Name</legend>
+                    <InputText @bind-Value="createDevice.DeviceName" />
+                    <ValidationMessage For=@(() => createDevice.DeviceName) />
+                </fieldset>
+                <fieldset>
+                    <legend>Device Zone</legend>
+                    <InputSelect @bind-Value="createDevice.ZoneID" class="form-control">
+                        <option value=""></option>
+                        @foreach (var zone in zones)
+                        {
+                            <option value="@zone.ZoneID">@zone.ZoneName</option>
+                        }
+                    </InputSelect>
+                    <ValidationMessage For=@(() => createDevice.ZoneID) />
+                </fieldset>
+                <fieldset>
+                    <legend>Device Category</legend>
+                    <InputSelect @bind-Value="createDevice.CategoryID" class="form-control">
+                        <option value=""></option>
+                        @foreach (var category in categories)
+                        {
+                            <option value="@category.CategoryID">@category.CategoryName</option>
+                        }
+                    </InputSelect>
+                    <ValidationMessage For=@(() => createDevice.CategoryID)/>
+                </fieldset>
+                <fieldset>
+                    <legend>Device Status</legend>
+                    <InputText @bind-Value="createDevice.Status" />
+                    <ValidationMessage For=@(() => createDevice.Status) />
+                </fieldset>
+                <fieldset>
+                    <legend>Device Active</legend>
+                    <InputCheckbox class="form-switch active" @bind-Value="createDevice.IsActive"/>
+                </fieldset>
+                <div>
+                    <button class="btn btn-outline-dark" type="submit"> Create Device </button>
+                    <Button class="btn btn-outline-dark" @onclick="OnClickList"> Back to List </Button>
+                </div>
+            </EditForm>
+        </div>
+    </div>    
+}
+
+
+@code {
+    [Parameter]
+    public Guid DeviceId { get; set; }
+    private List<ZoneModel> zones;
+    private List<CategoryModel> categories;
+    public DeviceModel createDevice { get; set; } = new();
+    EditContext context;
+    protected override async Task OnInitializedAsync()
+    {
+        //Get all zones
+        zones = await _dbZones.GetZones();
+        //Get all categories
+        categories = await _dbCategories.GetCategories();
+        //Initialise context
+        context = new EditContext(createDevice);
+    }
+    protected void OnClickList(EventArgs args)
+    {
+        NavigationManager.NavigateTo("/Devices/Index");
+    }
+    private void SubmitEventHandler(EditContext context)
+    {
+        if (context.Validate())
+        {
+            //Set new device guid and creation date
+            createDevice.DeviceID = Guid.NewGuid();
+            createDevice.DateCreated = DateTime.Now;
+            _dbDevices.InsertDevice(createDevice);
+            NavigationManager.NavigateTo("/Devices/Details/" + createDevice.DeviceID);
+        }
+    }
+}

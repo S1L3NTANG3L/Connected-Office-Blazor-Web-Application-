@@ -1,0 +1,71 @@
+﻿@*Index page used to show all devices*@
+@page "/Zones/Index"
+
+@using DataAccessLibrary
+@using DataAccessLibrary.Models
+@using DataAccessLibrary.Services
+
+@inject IZoneData _dbZones
+
+@*"~/images/create.png" Causes an error: https://stackoverflow.com/questions/52135957/how-to-show-image-in-blazor-view "/images/create.png" : Works*@
+<h1>
+	Zones
+	<a href="/Zones/Create/">@*Counter currently just a place holder *@
+		<img src="/images/create.png" style="height:30px; width:30px; position:relative; top:-2px" />
+	</a>
+</h1>
+
+<h4>Current Zones</h4>
+
+@if(zones is null)
+{
+	<LoadingTemplate> 
+		<span class="spinner-grow spinner-grow-sm" role="status" aria-hidden="true"></span>
+		Loading...        
+	</LoadingTemplate>
+}
+else
+{
+	<table class="table table-borderless">
+		<thead> 
+			<tr>
+				<td>Zone Name</td>
+				<td>Zone Description</td>
+				<td>Date Created</td>
+			</tr>
+		</thead>
+		<tbody>
+			@foreach(var zone in zones)
+			{
+				<tr>
+					<td>@zone.ZoneName</td>
+					<td>@zone.ZoneDescription</td>
+					<td>@zone.DateCreated</td>
+					<td>
+						<a href="/Zones/Edit/@zone.ZoneID">
+							<img src="/images/edit.png" style="height:20px;width:20px;" />
+						</a>
+					</td>
+					<td>
+						<a href="/Zones/Details/@zone.ZoneID">
+							<img src="/images/details.png" style="height:20px;width:20px;" />
+						</a>
+					</td>
+					<td>
+						<a href="/Zones/Delete/@zone.ZoneID">
+							<img src="/images/delete.png" style="height:20px;width:20px;" />
+						</a>
+					</td>
+				</tr>
+			}
+		</tbody>
+	</table>
+}
+
+@code {
+	private List<ZoneModel>? zones;
+	protected override async Task OnInitializedAsync()
+	{
+		zones = await _dbZones.GetZones();
+	}
+}

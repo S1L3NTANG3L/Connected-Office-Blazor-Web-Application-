@@ -1,0 +1,91 @@
+﻿@*Index page used to show all devices*@
+@page "/Devices/Index"
+
+@using DataAccessLibrary
+@using DataAccessLibrary.Models
+@using DataAccessLibrary.Services
+
+@inject IDeviceData _dbDevices
+@inject IZoneData _dbZones
+@inject ICategoryData _dbCategories
+
+@*"~/images/create.png" Causes an error: https://stackoverflow.com/questions/52135957/how-to-show-image-in-blazor-view "/images/create.png" : Works*@
+<h1>
+	Devices
+	<a href="/Devices/Create/">@*Counter currently just a place holder *@
+		<img src="/images/create.png" style="height:30px; width:30px; position:relative; top:-2px" />
+	</a>
+</h1>
+
+<h4>Current Devices</h4>
+
+@if(devices is null)
+{
+	<LoadingTemplate> 
+		<span class="spinner-grow spinner-grow-sm" role="status" aria-hidden="true"></span>
+		Loading...        
+	</LoadingTemplate>
+}
+else
+{
+	<table class="table table-borderless">
+		<thead> 
+			<tr>
+				<th>Device Name</th>
+				<th>Status</th>
+				<th>Is Active</th>
+				<th>Category</th>
+				<th>Zone</th>
+				<th>Date Created</th>
+			</tr>
+		</thead>
+		<tbody>
+			@foreach(var device in devices)
+			{
+				<tr> 
+					<td>@device.DeviceName</td>
+					<td>@device.Status</td>
+					<td>@if(device.IsActive)
+						{
+							<span class="oi oi-circle-check" aria-hidden="true"></span>
+						}
+						else
+						{
+							<span class="oi oi-circle-x" aria-hidden="true"></span>
+						}
+					</td>
+					<td>@categories.SingleOrDefault(x => x.CategoryID == device.CategoryID,categories.FirstOrDefault()).CategoryName</td>
+					<td>@zones.SingleOrDefault(x => x.ZoneID == device.ZoneID,zones.FirstOrDefault()).ZoneName</td>					
+					<td>@device.DateCreated</td>
+					<td>
+						<a href="/Devices/Edit/@device.DeviceID">
+							<img src="/images/edit.png" style="height:20px;width:20px;" />
+						</a>
+					</td>
+					<td>
+						<a href="/Devices/Details/@device.DeviceID">
+							<img src="/images/details.png" style="height:20px;width:20px;" />
+						</a>
+					</td>
+					<td>
+						<a href="/Devices/Delete/@device.DeviceID">
+							<img src="/images/delete.png" style="height:20px;width:20px;" />
+						</a>
+					</td>
+				</tr>
+			}
+		</tbody>
+	</table>
+}
+
+@code {
+	private List<DeviceModel> devices;
+	private List<ZoneModel> zones;
+	private List<CategoryModel> categories;
+	protected override async Task OnInitializedAsync()
+	{
+		zones = await _dbZones.GetZones();		
+		categories = await _dbCategories.GetCategories();
+		devices = await _dbDevices.GetDevices();
+	}
+}
